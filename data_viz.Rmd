@@ -1,0 +1,68 @@
+---
+title: "Data Cleaning and Visualization"
+output: pdf_document
+date: "`r Sys.Date()`"
+---
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+library(patchwork)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+library(tidyverse)
+library(janitor)
+library(readxl)
+library(viridisLite)
+```
+
+Uploading Milbank Primary Care Data
+```{r}
+pc_data = readxl::read_excel("data/primary-care-data-2010-2021.xlsx", sheet = "primary-care-data", range = "A1:EW13") %>% 
+  janitor::clean_names(
+  ) |> 
+  mutate(across(where(is.character), ~na_if(., "NA"))) |> 
+  mutate_if(is.character, as.numeric) %>% 
+  pivot_longer(
+    cols = -year,  # All columns except 'year'
+    names_to = c("state", "measure"),  # Names of new columns
+    names_pattern = "^(..)_?(.*)$"
+  )
+ 
+no_usc = pc_data |> 
+  filter(measure == "no_usc")
+
+ggplot(data = no_usc, aes(x = year, y = value, color = state, group = state)) +
+  geom_line() +
+  scale_color_viridis_d() +  # Use Viridis palette
+  labs(title = "No Usual Source of Care for each State",
+       x = "Year",
+       y = "'no_usc",
+       color = "State") +
+  theme_minimal()
+```
+
+Extracting PCP ratio data
+```{r}
+pc_ratio = readxl::read_excel("data/primary-care-data-2010-2021.xlsx", sheet = "pcp_ratio_data", range = "A1:CV9") |>
+  janitor::clean_names() |> 
+  mutate(across(where(is.character), ~na_if(., "NA"))) |> 
+  mutate_if(is.character, as.numeric) |> 
+  pivot_longer(
+    cols = -year,  # All columns except 'year'
+    names_to = c("state", "measure"),  # Names of new columns
+    names_pattern = "^(..)_?(.*)$"
+  )
+
+pcp= pc_ratio |> 
+  filter(measure == "pcp")
+  
+```
+
+```{r}
+
+```
+
